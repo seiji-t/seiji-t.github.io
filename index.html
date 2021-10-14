@@ -103,7 +103,7 @@ var update = function(Zs, oldZs, simulation) {
 		.attr("cy",function(d) { return +scale(d.y2); })
 	
 	simulation.force("center")
-		.x(scale(coords[coords.length-1].x1))
+		.x(scale(coords[coords.length-1].x2))
 		.y(0);
 //	simulation.alpha(0.3).restart();
 }
