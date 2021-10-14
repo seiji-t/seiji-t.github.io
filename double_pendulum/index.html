@@ -1,0 +1,163 @@
+<html>
+<head>
+	<style>
+		.bob {
+		  	fill: #000;
+		}
+
+		.shaft {
+			stroke: #000;
+			stroke-width: 2px;
+		}
+
+		.trace {
+			fill: none;
+			stroke: #F00;
+			stroke-width: 2px;
+		}
+
+		svg {
+			position:absolute;
+			top:0px;
+			left:0px;
+		}
+
+		canvas {
+			position:absolute;
+			top:0px;
+			left:0px;
+		}
+
+
+	</style>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.7.4/d3.js"></script>
+	<script src="./simple_pendulum.js"></script>
+	<script src="./nodes.js"></script>
+</head>
+<body>
+	<canvas width="960" height="500"></canvas>
+	<svg width="960" height="500"></svg>
+</body>
+<script>
+var svg = d3.select("svg")
+	width = +svg.attr("width"),
+	height = +svg.attr("height"),
+	g = svg.append("g").attr("transform", "translate(" + width*.5 + "," + height*.5 + ")");
+	color = d3.scaleSequential(d3.interpolateRainbow).domain([0, nPendula]);
+
+
+var canvas = d3.select("canvas");
+var context = canvas.node().getContext('2d');
+
+var scale = d3.scaleLinear().domain([0,1]).range([0,100])
+
+var oldZs = Zs;
+
+var path = d3.line()
+	.x(function(d) { return scale(l1*Math.sin(d[0])+l2*Math.sin(d[1])); })
+	.y(function(d) { return scale(l1*Math.cos(d[0])+l2*Math.cos(d[1])); })
+
+var update = function(Zs, oldZs, simulation) {
+	var coords = Zs.map(Z=>getCoords(Z)),
+		oldCoords = oldZs.map(Z=>getCoords(Z));
+
+	for (var i = coords.length - 1; i >= 0; i--) {
+		context.beginPath();
+		context.strokeStyle = color(i);
+		context.lineWidth = 2;
+		context.moveTo(scale(oldCoords[i].x2) + width/2, scale(oldCoords[i].y2) + height/2);
+		context.lineTo(scale(coords[i].x2) + width/2, scale(coords[i].y2) + height/2);
+		context.stroke();
+	}
+
+
+
+
+	var pendulum = g.selectAll(".pendulum").data(coords, function(d, i) { return i; })
+
+	var pendulumEnter = pendulum.enter()
+		.append("g").attr("class","pendulum")
+
+	pendulumEnter.append("line").attr("class", "firstShaft shaft")
+	pendulumEnter.append("line").attr("class", "secondShaft shaft")
+	pendulumEnter.append("circle").attr("class", "firstBob bob").attr("r",3)
+	pendulumEnter.append("circle").attr("class", "secondBob bob").attr("r",3)
+
+	var shaft1 = pendulum.select(".firstShaft")
+		.attr("x1", 0)
+		.attr("y1", 0)
+		.attr("x2", function(d) { return +scale(d.x1); })
+		.attr("y2", function(d) { return +scale(d.y1); })
+
+	var shaft2 = pendulum.select(".secondShaft")
+		.attr("x1", function(d) { return +scale(d.x1); })
+		.attr("y1", function(d) { return +scale(d.y1); })
+		.attr("x2", function(d) { return +scale(d.x2); })
+		.attr("y2", function(d) { return +scale(d.y2); })
+
+	var bob1 = pendulum.select(".firstBob")
+		.attr("cx",function(d) { return +scale(d.x1); })
+		.attr("cy",function(d) { return +scale(d.y1); })
+	var bob2 = pendulum.select(".secondBob")
+		.attr("cx",function(d) { return +scale(d.x2); })
+		.attr("cy",function(d) { return +scale(d.y2); })
+	
+	simulation.force("center")
+		.x(scale(coords[coords.length-1].x1))
+		.y(0);
+//	simulation.alpha(0.3).restart();
+}
+
+var svg = d3.select("svg"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height"),
+    color = d3.scaleOrdinal(d3.schemeCategory10);
+
+var a = {id: "a"},
+    b = {id: "b"},
+    c = {id: "c"},
+    nodes = [a, b, c],
+    links = [];
+
+var simulation = d3.forceSimulation(nodes)
+    .force("charge", d3.forceManyBody().strength(-1000))
+    .force("link", d3.forceLink(links).distance(200))
+    .force("x", d3.forceX())
+    .force("y", d3.forceY())
+    .force("center", d3.forceCenter())
+    .alphaTarget(1)
+    .on("tick", ticked);
+
+var g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")"),
+    link = g.append("g").attr("stroke", "#000").attr("stroke-width", 1.5).selectAll(".link"),
+    node = g.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5).selectAll(".node");
+
+restart();
+var run = setInterval(function() { update(Zs, oldZs, simulation); oldZs = Zs; Zs = Zs.map(Z=>RK4(Z, f, 0.005));  }, 2);
+
+////
+
+//d3.timeout(function() {
+//  links.push({source: a, target: b}); // Add a-b.
+//  links.push({source: b, target: c}); // Add b-c.
+//  links.push({source: c, target: a}); // Add c-a.
+//  restart();
+//}, 1000);
+
+//d3.interval(function() {
+//  nodes.pop(); // Remove c.
+//  links.pop(); // Remove c-a.
+//  links.pop(); // Remove b-c.
+//  restart();
+//}, 2000, d3.now());
+//
+//d3.interval(function() {
+//  nodes.push(c); // Re-add c.
+//  links.push({source: b, target: c}); // Re-add b-c.
+//  links.push({source: c, target: a}); // Re-add c-a.
+//  restart();
+//}, 2000, d3.now() + 1000);
+
+
+
+</script>
