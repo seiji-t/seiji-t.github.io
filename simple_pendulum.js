@@ -1,11 +1,11 @@
 Array.prototype.scalarMultiply = function(x) { return this.map(function(d) { return x * d; }); }
 
-var l1 = 1, l2 = 5,
+var l1 = 1, l2 = 1,
 	m1 = 1.0, m2 = 1.0,
 	G = 9.8;
 
-var theta1 = 0.0*Math.PI,
-	theta2 = 0.0*Math.PI,
+var theta1 = 0.5*Math.PI,
+	theta2 = 0.5*Math.PI,
 	p1 = 0,
 	p2 = 0;
 

@@ -1,4 +1,7 @@
-<!---https://bl.ocks.org/travisdoesmath/c0d08396a0bf8d5de8519ded00bb7866---!>
+<!---
+https://bl.ocks.org/travisdoesmath/c0d08396a0bf8d5de8519ded00bb7866
+https://bl.ocks.org/mbostock/1095795
+---!>
 <html>
 <head>
 	<style>
@@ -100,10 +103,15 @@ var update = function(Zs, oldZs, simulation) {
 		.attr("cx",function(d) { return +scale(d.x2); })
 		.attr("cy",function(d) { return +scale(d.y2); })
 	
-	simulation.force("center")
-		.x(scale(coords[coords.length-1].x2))
-		.y(0);
-	simulation.alpha(0.3).restart();
+//	simulation.force("center")
+//		.x(scale(coords[coords.length-1].x2))
+//		.y(0);
+	simulation.force("x")
+		.x((d, i) => i%5 ? 0 : scale(coords[coords.length-1].x2))
+		
+	simulation.force("y")
+		.y((d, i) => i%5 ? 0 : scale(coords[coords.length-1].y2))
+//	simulation.alpha(0.3).restart();
 }
 
 var svg = d3.select("svg"),
@@ -117,18 +125,22 @@ var svg = d3.select("svg"),
 //    nodes = [a, b, c],
 //    links = [];
 
-var nodes = d3.range(100).map(function(i) {
+var nodes = d3.range(50).map(function(i) {
 	return {index: i},
-	links = [];
+	links = d3.range(50).map(function(i) {
+        return {source: 0, target: i}});
 });
 
 var simulation = d3.forceSimulation(nodes)
-    .force("charge", d3.forceManyBody().strength(-10))
-    .force("link", d3.forceLink(links).distance(5))
-    .force("x", d3.forceX())
-    .force("y", d3.forceY())
-    .force("center", d3.forceCenter())
-    .alphaTarget(1)
+    .force("charge", d3.forceManyBody().strength(-30))
+    .force("link", d3.forceLink(links).distance(50))
+    .force("x", d3.forceX().strength(0.01))
+    .force("y", d3.forceY().strength(0.01))
+//    .force("center", d3.forceCenter())
+    .force("collide", d3.forceCollide().radius(d => d.r + 1).iterations(1))
+//    .force("charge", d3.forceManyBody().strength((d, i) => i ? 0 : -width * 2 / 3))
+    .alphaTarget(0.3)
+    .velocityDecay(0.1)
     .on("tick", ticked);
 
 var g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")"),
@@ -136,6 +148,7 @@ var g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + heigh
     node = g.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5).selectAll(".node");
 
 restart();
+
 var run = setInterval(function() { update(Zs, oldZs, simulation); oldZs = Zs; Zs = Zs.map(Z=>RK4(Z, f, 0.005));  }, 2);
 
 </script>
