@@ -64,7 +64,7 @@ function restart() {
     .attr('y', '3px')
     .style('font-size', '12px')
     .text('VIVR3')
-    .style('fill', 'orange')
+    .style('stroke', 'orange')
 //    .text(d => d.id)
 
 
