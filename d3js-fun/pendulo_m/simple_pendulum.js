@@ -1,15 +1,15 @@
 Array.prototype.scalarMultiply = function(x) { return this.map(function(d) { return x * d; }); }
 
-var l1 = 1, l2 = 1,
-	m1 = 1, m2 = 1,
+var l1 = 1, l2 =1,
+	m1 = 1.0, m2 = 1.0,
 	G = 9.8;
 
-var theta1 = 0.49*Math.PI,
-	theta2 = 1.0*Math.PI,
+var theta1 = 0.0*Math.PI,
+	theta2 = 0.1,
 	p1 = 0,
 	p2 = 0;
 
-var nPendula = 40,
+var nPendula = 1,
 	initialRange = 1e-4;
 
 theta1dot = function(theta1, theta2, p1, p2) {
