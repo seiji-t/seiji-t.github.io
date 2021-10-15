@@ -1,6 +1,6 @@
 Array.prototype.scalarMultiply = function(x) { return this.map(function(d) { return x * d; }); }
 
-var l1 = 1, l2 = 1,
+var l1 = 1, l2 =1,
 	m1 = 1.0, m2 = 1.0,
 	G = 9.8;
 
