@@ -65,7 +65,7 @@ var update = function(Zs, oldZs, simulation) {
 	var coords = Zs.map(Z=>getCoords(Z)),
 		oldCoords = oldZs.map(Z=>getCoords(Z));
 
-	for (var i = coords.length - 1; i >= 0; i--) {
+	for (var i = coords.length - 1; i >= d3.max([0, coords.length-10]); i--) {
 		context.beginPath();
 		context.strokeStyle = color(i);
 		context.lineWidth = 2;
@@ -107,10 +107,14 @@ var update = function(Zs, oldZs, simulation) {
 //		.x(scale(coords[coords.length-1].x2))
 //		.y(0);
 	simulation.force("x")
-		.x((d, i) => i%5 ? 0 : scale(coords[coords.length-1].x2))
-		
+		.x((d, i) => i%2 ? 0 : scale(coords[coords.length-1].x2))	
 	simulation.force("y")
-		.y((d, i) => i%5 ? 0 : scale(coords[coords.length-1].y2))
+		.y((d, i) => i%2 ? 0 : scale(coords[coords.length-1].y2))
+//	simulation.force("x")
+//		.x(scale(coords[coords.length-1].x2))
+//		
+//	simulation.force("y")
+//		.y(scale(coords[coords.length-1].y2))
 //	simulation.alpha(0.3).restart();
 }
 
@@ -127,24 +131,25 @@ var svg = d3.select("svg"),
 
 var nodes = d3.range(50).map(function(i) {
 	return {index: i},
-	links = d3.range(50).map(function(i) {
-        return {source: 0, target: i}});
+//	links = []
+	links = d3.range(49).map(function(i) {
+        return {source: i, target: i+1}});
 });
 
 var simulation = d3.forceSimulation(nodes)
     .force("charge", d3.forceManyBody().strength(-30))
     .force("link", d3.forceLink(links).distance(50))
-    .force("x", d3.forceX().strength(0.01))
-    .force("y", d3.forceY().strength(0.01))
+    .force("x", d3.forceX().strength(0.1))
+    .force("y", d3.forceY().strength(0.1))
 //    .force("center", d3.forceCenter())
-    .force("collide", d3.forceCollide().radius(d => d.r + 1).iterations(1))
+    .force("collide", d3.forceCollide().radius(10).iterations(10))
 //    .force("charge", d3.forceManyBody().strength((d, i) => i ? 0 : -width * 2 / 3))
     .alphaTarget(0.3)
     .velocityDecay(0.1)
     .on("tick", ticked);
 
 var g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")"),
-    link = g.append("g").attr("stroke", "#000").attr("stroke-width", 1.5).selectAll(".link"),
+    link = g.append("g").attr("stroke", "#000").attr("stroke-width", 0.5).selectAll(".link"),
     node = g.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5).selectAll(".node");
 
 restart();
