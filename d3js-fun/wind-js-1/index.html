@@ -18,7 +18,11 @@
       #mapCanvas {
         padding:0;
       }
-
+	
+	#controls{
+  	flex-basis: 200px;
+  	padding: 0 5px;
+	}
       #credit {
         position: absolute;
         bottom: 10px;
@@ -62,7 +66,7 @@
     </script>
   </head>
 
-  <body class="">
+  <body class="controls">
     <button type="button" onclick="loadTemp('0');">Temp0</button>
     <button type="button" onclick="loadTemp('1');">Temp1</button>
     <button type="button" onclick="loadTemp('2');">Temp2</button>
@@ -89,6 +93,7 @@
           },500);
         }
        function loadTemp(id){
+	  redraw()
           console.log('load temp '+id)
           layersRequest = _esriRequest({
             url: './temp'+id+'.json',

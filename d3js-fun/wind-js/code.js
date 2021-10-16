@@ -111,21 +111,20 @@ function updateMap(){
           basemap: "dark-gray"
         });
 
-	year = slide.value
-        span.innerHTML = slide.value;
-
         map.on("load", mapLoaded);
 //        map.on("load", mapLoaded(0));
         function mapLoaded() {
 //        year = document.getElementById("slide").value;
 //      year = 0
+	year = slide.value
+        span.innerHTML = slide.value;
           // Add raster layer
           if ( canvasSupport ) {
             rasterLayer = new RasterLayer(null, {
               opacity: 0.55
             });
+	    map.on(redraw)
             map.addLayer(rasterLayer);
-
             map.on("extent-change", redraw);
             map.on("resize", function(){});
             map.on("zoom-start", redraw);
