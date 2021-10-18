@@ -18,11 +18,7 @@
       #mapCanvas {
         padding:0;
       }
-	
-	#controls{
-  	flex-basis: 200px;
-  	padding: 0 5px;
-	}
+
       #credit {
         position: absolute;
         bottom: 10px;
@@ -67,9 +63,11 @@
   </head>
 
   <body class="controls">
+   <div style="position:fixed; top: 10px; left: 80px; z-index:100;">
     <button type="button" onclick="loadTemp('0');">Temp0</button>
     <button type="button" onclick="loadTemp('1');">Temp1</button>
     <button type="button" onclick="loadTemp('2');">Temp2</button>
+   </div>
      <div id="mapCanvas" style="height:100%;">
      </div>
      <div id="credit">Inspired by <a href="https://github.com/cambecc/earth">Earth</a>, data from <a href="http://nomads.ncdc.noaa.gov/data.php?name=access#hires_weather_datasets">GFS</a>, open source on <a href="https://github.com/Esri/wind-js">Github</a></div>
