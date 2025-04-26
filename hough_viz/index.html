@@ -46,8 +46,7 @@ html, body {
 <script>
 var dojoConfig = {
   paths: {
-    plugins: "/plugins"
-  }
+    plugins: location.pathname.replace(/\/[^/]+$/, "") + "/plugins"  }
 };
 </script>
 
