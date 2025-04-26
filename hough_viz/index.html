@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wind Animation Button Switch</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<link rel="stylesheet" href="https://js.arcgis.com/3.20/esri/css/esri.css">
+
+<style>
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+#mapCanvas {
+  width: 100%;
+  height: 100%;
+}
+#controls {
+  position: absolute;
+  top: 250px;
+  left: 10px;
+  background: rgba(0,0,0,0.5);
+  padding: 10px;
+  z-index: 999;
+  color: white;
+}
+#controls button {
+  font-size: 16px;
+  padding: 6px 12px;
+}
+#credit {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  color: #fff;
+  font-size: 14px;
+}
+#credit a {
+  color: #08c;
+}
+</style>
+
+<script>
+var dojoConfig = {
+  paths: {
+    plugins: "/plugins"
+  }
+};
+</script>
+
+<script src="./windy.js"></script>
+<script src="https://js.arcgis.com/3.20compact/"></script>
+
+<script>
+var map, rasterLayer, windy;
+var canvasSupport = !!document.createElement("canvas").getContext;
+var datasets = ["gfs.json", "hough.json"];
+var currentIndex = 0;
+
+function range(start, end) {
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+}
+
+var zonalOptions = range(0,5); // example values
+var meridionalOptions = range(0,3); // example values
+var kindOptions = range(0,2); // example values
+
+var selectedZonal = null;
+var selectedMeridional = null;
+var selectedKind = null;
+
+require([
+  "esri/map",
+  "esri/request",
+  "dojo/parser",
+  "plugins/RasterLayer",
+  "dojo/domReady!"
+], function(Map, esriRequest, parser, RasterLayer) {
+  parser.parse();
+
+  map = new Map("mapCanvas", {
+    center: [-99.076, 39.132],
+    zoom: 3,
+    basemap: "dark-gray"
+  });
+
+  map.on("load", function() {
+    if (!canvasSupport) {
+      document.getElementById("mapCanvas").innerHTML = "This browser doesn't support canvas.";
+      return;
+    }
+
+    rasterLayer = new RasterLayer(null, { opacity: 0.55 });
+    map.addLayer(rasterLayer);
+
+    map.on("extent-change", redraw);
+    map.on("resize", redraw);
+    map.on("zoom-start", redraw);
+    map.on("pan-start", redraw);
+
+    createButtons();
+  });
+
+  function createButtons() {
+    createButtonGroup('zonalButtons', zonalOptions, function(value) {
+      selectedZonal = value;
+    });
+    createButtonGroup('meridionalButtons', meridionalOptions, function(value) {
+      selectedMeridional = value;
+    });
+    createButtonGroup('kindButtons', kindOptions, function(value) {
+      selectedKind = value;
+    });
+
+  }
+
+  function createButtonGroup(containerId, options, onSelect) {
+  var container = document.getElementById(containerId);
+  options.forEach(function(opt) {
+    var button = document.createElement('button');
+    button.textContent = opt;
+    button.addEventListener('click', function() {
+      onSelect(opt);
+      highlightSelectedButton(container, button);
+      tryLoadIfReady(); // important
+    });
+    container.appendChild(button);
+  });
+}
+
+
+function tryLoadIfReady() {
+  console.log("Selected:", selectedZonal, selectedMeridional, selectedKind);
+  
+  if (selectedZonal !== null && selectedMeridional !== null && selectedKind !== null) {
+    var filename = `data/file_${selectedZonal}_${selectedMeridional}_${selectedKind}.json`;
+    console.log("Auto-loading:", filename);
+    loadWindData(filename);
+  }
+}
+
+
+  function highlightSelectedButton(container, selectedButton) {
+    Array.from(container.children).forEach(function(btn) {
+      btn.style.backgroundColor = '';
+    });
+    selectedButton.style.backgroundColor = 'blue';
+    selectedButton.style.color = 'white';
+  }
+
+  function loadWindData(file) {
+  console.log("Trying to load:", file); // <-- Add this
+  if (!rasterLayer || !rasterLayer._element) return;
+
+  var ctx = rasterLayer._element.getContext("2d");
+  ctx.clearRect(0, 0, rasterLayer._element.width, rasterLayer._element.height);
+
+  if (windy) {
+    windy.stop();
+    windy = null;
+  }
+
+  esriRequest({
+    url: './' + file,
+    content: {},
+    handleAs: "json"
+  }).then(function(response) {
+    rasterLayer._element.width = map.width;
+    rasterLayer._element.height = map.height;
+
+    windy = new Windy({
+      canvas: rasterLayer._element,
+      data: response
+    });
+
+    redraw();
+  }, function(error) {
+    console.error("Failed to load:", file, error.message);
+    alert("Error: Failed to load " + file);
+  });
+}
+
+
+  function redraw() {
+    if (!windy || !rasterLayer || !rasterLayer._element) return;
+
+    rasterLayer._element.width = map.width;
+    rasterLayer._element.height = map.height;
+
+    windy.stop();
+    var extent = map.geographicExtent;
+
+    setTimeout(function() {
+      windy.start(
+        [[0, 0], [map.width, map.height]],
+        map.width,
+        map.height,
+        [[extent.xmin, extent.ymin], [extent.xmax, extent.ymax]]
+      );
+    }, 100);
+  }
+
+  function highlightSelectedButton(container, selectedButton) {
+  Array.from(container.children).forEach(function(btn) {
+    btn.style.backgroundColor = '';
+    btn.style.color = ''; // <-- Reset text color too
+  });
+
+  selectedButton.style.backgroundColor = 'blue';
+  selectedButton.style.color = 'white';
+}
+
+});
+
+
+  window.addEventListener('DOMContentLoaded', function() {
+  var controls = document.getElementById('controls');
+  
+  // datasets.forEach(function(file, index) {
+  //   var button = document.createElement('button');
+  //   button.textContent = "Load " + file;
+  //   button.addEventListener('click', function() {
+  //     currentIndex = index;
+  //     console.log("Switching to:", file);
+  //     loadWindData(file);
+  //   });
+  //   controls.appendChild(button);
+  // });
+});
+
+</script>
+</head>
+
+<body>
+  <div id="controls">
+    <div>
+      <strong>Zonal Wavenumber:</strong>
+      <div id="zonalButtons"></div>
+    </div>
+    <div style="margin-top: 10px;">
+      <strong>Meridional Index:</strong>
+      <div id="meridionalButtons"></div>
+    </div>
+    <div style="margin-top: 10px;">
+      <strong>Wave Kind:</strong>
+      <div id="kindButtons"></div>
+    </div>
+  </div>
+
+  <div id="mapCanvas"></div>
+
+  <div id="credit">
+    Inspired by <a href="https://github.com/cambecc/earth">Earth</a>,
+    data from <a href="http://nomads.ncdc.noaa.gov/data.php?name=access#hires_weather_datasets">GFS</a>,
+    open source on <a href="https://github.com/Esri/wind-js">Github</a>
+  </div>
+</body>
+
+</html>
